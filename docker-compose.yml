@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/api
+    command: ["cargo", "watch", "-x", "run"]
