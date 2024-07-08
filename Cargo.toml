@@ -5,6 +5,12 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.8"
+actix-rt = "2.10"
+dotenv = "0.15"
+deadpool-postgres = { version = "0.14.0", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+tokio-postgres = "0.7.0"
+
 
 [[bin]]
 name = "boilerplate"
