@@ -11,27 +11,27 @@ Make sure you have installed on your system:
 
 ## Setting Up the Environment
 
-1. **Create the `.env` file:**
+  1. **Create the `.env` file:**
 
-  Copy the `.env.example` file to `.env` in the root of the project. This file contains the environment variables needed for Aplication and PostgreSQL connection.
+    Copy the `.env.example` file to `.env` in the root of the project. This file contains the environment variables needed for Aplication and PostgreSQL connection.
 
-3. **Start the Docker environment:**
+  2. **Start the Docker environment:**
 
-  To start the Docker containers for Actix-Web and PostgreSQL, run the following command:
+    To start the Docker containers for Actix-Web and PostgreSQL, run the following command:
 
-  ```bash
-  make up
-  ```
+      ```bash
+     make up
+      ```
 
-- This command will initialize the Actix-Web service, accessible at http://localhost:8081.
--	PostgreSQL will be available on the default port 5432 of your localhost.
+    - This command will initialize the Actix-Web service, accessible at http://localhost:8081.
+    -	PostgreSQL will be available on the default port 5432 of your localhost.
 
 ## Makefile Commands
 
-The Makefile includes commands to facilitate development and management of the Docker environment. Here are the main available commands:
+  The Makefile includes commands to facilitate development and management of the Docker environment. Here are the main available commands:
 
-- **`make run-migration file=<filename.sql>`**: Executes a specific SQL file located in the `src/migrations` directory within the PostgreSQL container. Example:
+  - **`make run-migration file=<filename.sql>`**: Executes a specific SQL file located in the `src/migrations` directory within the PostgreSQL container. Example:
 
-  ```bash
-  make run-migration file=0_initial.sql
-  ```
+    ```bash
+    make run-migration file=0_initial.sql
+    ```
