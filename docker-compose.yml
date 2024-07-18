@@ -1,5 +1,6 @@
 services:
   api:
+    container_name: boilerplate-api
     build: .
     ports:
       - "8081:8081"
@@ -11,6 +12,7 @@ services:
         condition: service_healthy
 
   postgres:
+    container_name: boilerplate-postgres
     image: postgres
     shm_size: 128mb
     environment:
@@ -24,3 +26,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/migrations:/migrations
+
+volumes:
+  postgres-data:

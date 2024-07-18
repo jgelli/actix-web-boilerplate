@@ -10,6 +10,8 @@ dotenv = "0.15"
 deadpool-postgres = { version = "0.14.0", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
 tokio-postgres = "0.7.0"
+tokio-pg-mapper = "0.2.0"
+tokio-pg-mapper-derive = "0.2.0"
 
 
 [[bin]]
