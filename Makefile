@@ -14,7 +14,7 @@ MIGRATION_DIR = /migrations
 
 .PHONY: up
 up:
-	docker-compose up -d
+	docker-compose --env-file .env up -d
 
 .PHONY: down
 down:
