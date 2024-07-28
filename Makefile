@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 include .env
 
 export DB_USER
@@ -8,9 +10,12 @@ export DB_URL
 
 POSTGRES_CONTAINER_NAME = boilerplate-postgres
 
-EXEC_PSQL = docker exec -i $(POSTGRES_CONTAINER_NAME) psql -U $(DB_USER) -d $(DB_NAME)
+DOCKER_EXEC = docker exec -i
 
-MIGRATION_DIR = /migrations
+EXEC_PSQL = $(DOCKER_EXEC) $(POSTGRES_CONTAINER_NAME) psql -U $(DB_USER) -d $(DB_NAME)
+
+DOCKER_MIGRATION_DIR = /migrations
+PROJECT_MIGRATION_DIR = src/migrations
 
 .PHONY: up
 up:
@@ -23,10 +28,22 @@ down:
 .PHONY: run-migration
 run-migration:
 	@if [ -z "$(file)" ]; then \
-		echo "Error: Specify the .sql file name. Example: make run-migration file=0_initial.sql"; \
+		echo "Error: Specify the .sql file name or 'all'. Example: make run-migration file=0_initial.sql or make run-migration file=all"; \
 		exit 1; \
+	elif [ "$(file)" = "all" ]; then \
+		for filepath in $$(ls $(PROJECT_MIGRATION_DIR)/*.sql | sort -V); do \
+			filename=$$(basename $$filepath); \
+			echo "Processing $$file"; \
+			$(EXEC_PSQL) -f $(DOCKER_MIGRATION_DIR)/$$filename; \
+		done; \
+	else \
+		$(EXEC_PSQL) -f src$(DOCKER_MIGRATION_DIR)/$(file); \
 	fi
-	$(EXEC_PSQL) -f $(MIGRATION_DIR)/$(file)
+
+# process_sql:
+# 	@bash -c 'for file in $(shell ls src/migrations/*.sql | sort -V); do \
+# 		echo "Processing $$file"; \
+# 	done'
 
 
 .PHONY: clean

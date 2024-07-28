@@ -8,8 +8,12 @@ actix-web = "4.8"
 actix-rt = "2.10"
 dotenv = "0.15"
 deadpool-postgres = { version = "0.14.0", features = ["serde"] }
+derive_more = "0.99.7"
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
-tokio-postgres = "0.7.0"
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 tokio-pg-mapper = "0.2.0"
 tokio-pg-mapper-derive = "0.2.0"
 

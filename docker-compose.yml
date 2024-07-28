@@ -6,6 +6,7 @@ services:
       - "8081:8081"
     volumes:
       - .:/api
+      - ./uploads:/api/uploads
     command: ["cargo", "watch", "-x", "run"]
     depends_on:
       postgres:
