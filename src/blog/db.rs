@@ -28,3 +28,18 @@ pub async fn add_post(client: &Client, new_blog: NewBlogPost) -> Result<BlogPost
         .pop()
         .ok_or(MyError::NotFound)
 }
+
+pub async fn get_posts(client: &Client) -> Result<Vec<BlogPost>, MyError> {
+    let stmt = include_str!("sql/get_posts.sql");
+    let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
+    let stmt = client.prepare(&stmt).await.unwrap();
+
+    let results = client
+        .query(&stmt, &[])
+        .await?
+        .iter()
+        .map(|row| BlogPost::from_row_ref(row).unwrap())
+        .collect::<Vec<BlogPost>>();
+
+    Ok(results)
+}

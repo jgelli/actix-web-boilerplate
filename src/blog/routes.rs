@@ -1,12 +1,15 @@
 use actix_web::{get, post, web, Error, HttpResponse, Responder, Scope};
 use deadpool_postgres::Pool;
 
-use super::db;
-use super::models::NewBlogPost;
+use super::{db, errors::MyError, models::NewBlogPost};
 
 #[get("/")]
-async fn get_posts() -> impl Responder {
-    "List of blog posts"
+async fn get_posts(pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
+    let client = pool.get().await.map_err(MyError::PoolError)?;
+
+    let posts = db::get_posts(&client).await?;
+
+    Ok(HttpResponse::Ok().json(posts))
 }
 
 #[get("/{id}")]
