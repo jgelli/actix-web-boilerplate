@@ -1,5 +1,6 @@
 use actix_web::{get, post, web, Error, HttpResponse, Responder, Scope};
 use deadpool_postgres::Pool;
+use validator::Validate;
 
 use super::{db, errors::MyError, models::NewBlogPost};
 
@@ -23,6 +24,10 @@ async fn add_post(
     pool: web::Data<Pool>,
 ) -> Result<HttpResponse, Error> {
     let post_data: NewBlogPost = post.into_inner();
+
+    if let Err(e) = post_data.validate() {
+        return Ok(HttpResponse::BadRequest().json(e.to_string()));
+    }
 
     let client = pool.get().await.unwrap();
     let new_post = db::add_post(&client, post_data).await?;
