@@ -1,14 +1,24 @@
 use deadpool_postgres::Client;
 use tokio_pg_mapper::FromTokioPostgresRow;
 
-use super::{
-    errors::MyError,
-    models::{BlogPost, NewBlogPost},
-};
+use super::{errors::MyError, models::BlogPost};
 
-pub async fn add_post(client: &Client, new_blog: NewBlogPost) -> Result<BlogPost, MyError> {
+pub async fn get_post_by_slug(client: &Client, slug: &str) -> Result<BlogPost, MyError> {
+    let stmt = include_str!("sql/get_post_by_slug.sql");
+    let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
+
+    client.prepare(&stmt).await?;
+
+    let row = client.query_one(&stmt, &[&slug]).await?;
+    let post = BlogPost::from_row_ref(&row).map_err(MyError::from)?;
+
+    Ok(post)
+}
+
+pub async fn add_post(client: &Client, new_blog: BlogPost) -> Result<BlogPost, MyError> {
     let stmt = include_str!("sql/insert_post.sql");
     let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
+    println!("{}", &stmt);
     let stmt = client.prepare(&stmt).await.unwrap();
     client
         .query(

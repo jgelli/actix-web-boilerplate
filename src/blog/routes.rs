@@ -2,7 +2,14 @@ use actix_web::{get, post, web, Error, HttpResponse, Responder, Scope};
 use deadpool_postgres::Pool;
 use validator::Validate;
 
-use super::{db, errors::MyError, models::NewBlogPost};
+use super::{
+    db,
+    errors::MyError,
+    models::{BlogPost, NewBlogPost},
+    utils::generate_unique_slug,
+};
+
+// use crate::blog::utils::generate_unique_slug;
 
 #[get("/")]
 async fn get_posts(pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
@@ -30,7 +37,13 @@ async fn add_post(
     }
 
     let client = pool.get().await.unwrap();
-    let new_post = db::add_post(&client, post_data).await?;
+    let slug = generate_unique_slug(&client, &post_data.title)
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    println!("{}", &slug);
+
+    let new_post = db::add_post(&client, BlogPost::new(post_data, slug)).await?;
+    println!("{:?}", &new_post);
 
     Ok(HttpResponse::Ok().json(new_post))
 }

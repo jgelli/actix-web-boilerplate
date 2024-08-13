@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 use validator::Validate;
@@ -12,8 +12,8 @@ pub struct BlogPost {
     pub feature_image: Option<String>,
     pub slug: String,
     pub author: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
     pub active: bool,
 }
 
@@ -27,7 +27,21 @@ pub struct NewBlogPost {
 
     pub feature_image: Option<String>,
 
-    pub slug: String,
-
     pub author: String,
+}
+
+impl BlogPost {
+    pub fn new(new_post: NewBlogPost, slug: String) -> Self {
+        BlogPost {
+            id: 0,
+            title: new_post.title,
+            content: new_post.content,
+            feature_image: new_post.feature_image,
+            slug,
+            author: new_post.author,
+            created_at: None,
+            updated_at: None,
+            active: false,
+        }
+    }
 }

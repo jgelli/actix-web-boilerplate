@@ -17,6 +17,7 @@ tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 tokio-pg-mapper = "0.2.0"
 tokio-pg-mapper-derive = "0.2.0"
 validator = { version = "0.18", features = ["derive"] }
+slug = "0.1.5"
 
 
 [[bin]]
