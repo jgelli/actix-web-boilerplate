@@ -9,8 +9,6 @@ use super::{
     utils::generate_unique_slug,
 };
 
-// use crate::blog::utils::generate_unique_slug;
-
 #[get("/")]
 async fn get_posts(pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
     let client = pool.get().await.map_err(MyError::PoolError)?;
@@ -20,9 +18,15 @@ async fn get_posts(pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(posts))
 }
 
-#[get("/{id}")]
-async fn get_post(path: web::Path<(u32,)>) -> impl Responder {
-    format!("Details of blog post with id {}", path.0)
+#[get("/{slug}")]
+async fn get_post(slug: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
+    let slug_value = slug.into_inner();
+
+    let client = pool.get().await.map_err(MyError::PoolError)?;
+
+    let post = db::get_post_by_slug(&client, &slug_value).await?;
+
+    Ok(HttpResponse::Ok().json(post))
 }
 
 #[post("/")]
@@ -40,7 +44,6 @@ async fn add_post(
     let slug = generate_unique_slug(&client, &post_data.title)
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
-    println!("{}", &slug);
 
     let new_post = db::add_post(&client, BlogPost::new(post_data, slug)).await?;
     println!("{:?}", &new_post);
