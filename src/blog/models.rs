@@ -44,4 +44,15 @@ impl BlogPost {
             active: false,
         }
     }
+
+    pub fn update_from(&mut self, updated_post: NewBlogPost, new_slug: Option<String>) {
+        self.title = updated_post.title;
+        self.content = updated_post.content;
+        self.feature_image = updated_post.feature_image;
+        self.author = updated_post.author;
+
+        if let Some(slug) = new_slug {
+            self.slug = slug;
+        }
+    }
 }

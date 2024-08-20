@@ -1,4 +1,6 @@
-use actix_web::{get, post, web, Error, HttpResponse, Responder, Scope};
+use std::collections::HashMap;
+
+use actix_web::{get, post, put, web, Error, HttpResponse, Responder, Scope};
 use deadpool_postgres::Pool;
 use validator::Validate;
 
@@ -46,9 +48,40 @@ async fn add_post(
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
     let new_post = db::add_post(&client, BlogPost::new(post_data, slug)).await?;
-    println!("{:?}", &new_post);
 
     Ok(HttpResponse::Ok().json(new_post))
+}
+
+#[put("/{slug}")]
+async fn update_post(
+    slug: web::Path<String>,
+    post: web::Json<NewBlogPost>,
+    pool: web::Data<Pool>,
+    query: web::Query<HashMap<String, String>>,
+) -> Result<HttpResponse, Error> {
+    let slug_value = slug.into_inner();
+    let post_data: NewBlogPost = post.into_inner();
+
+    if let Err(e) = post_data.validate() {
+        return Ok(HttpResponse::BadRequest().json(e.to_string()));
+    }
+
+    let client = pool.get().await.unwrap();
+
+    // let need_update_slug = query.get("update_slug").map_or(false, |v| v == "1");
+
+    let new_slug = match query.get("update_slug").map(|v| v.as_str()) {
+        Some("1") => Some(generate_unique_slug(&client, &post_data.title).await?),
+        _ => None,
+    };
+
+    let mut existing_post = db::get_post_by_slug(&client, &slug_value).await?;
+
+    existing_post.update_from(post_data, new_slug);
+
+    let updated_post = db::update_post(&client, &existing_post).await?;
+
+    Ok(HttpResponse::Ok().json(updated_post))
 }
 
 pub fn config() -> Scope {
@@ -56,4 +89,5 @@ pub fn config() -> Scope {
         .service(get_posts)
         .service(get_post)
         .service(add_post)
+        .service(update_post)
 }
