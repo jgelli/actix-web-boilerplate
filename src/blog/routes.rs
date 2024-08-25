@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use actix_web::{get, post, put, web, Error, HttpResponse, Responder, Scope};
 use deadpool_postgres::Pool;
+use serde::Deserialize;
 use validator::Validate;
 
 use super::{
@@ -11,11 +12,21 @@ use super::{
     utils::generate_unique_slug,
 };
 
+#[derive(Deserialize)]
+pub struct ListParams {
+    last_id: Option<i32>,
+    limit: Option<i64>,
+    title: Option<String>,
+}
+
 #[get("/")]
-async fn get_posts(pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
+async fn get_posts(
+    pool: web::Data<Pool>,
+    query: web::Query<ListParams>,
+) -> Result<HttpResponse, Error> {
     let client = pool.get().await.map_err(MyError::PoolError)?;
 
-    let posts = db::get_posts(&client).await?;
+    let posts = db::get_posts(&client, query.last_id, query.limit, query.title.clone()).await?;
 
     Ok(HttpResponse::Ok().json(posts))
 }
@@ -67,8 +78,6 @@ async fn update_post(
     }
 
     let client = pool.get().await.unwrap();
-
-    // let need_update_slug = query.get("update_slug").map_or(false, |v| v == "1");
 
     let new_slug = match query.get("update_slug").map(|v| v.as_str()) {
         Some("1") => Some(generate_unique_slug(&client, &post_data.title).await?),
