@@ -76,7 +76,7 @@ pub async fn get_posts(
     Ok(results)
 }
 
-pub async fn update_post(client: &Client, post: &NewBlogPost) -> Result<BlogPost, MyError> {
+pub async fn update_post(client: &Client, post: &BlogPost) -> Result<BlogPost, MyError> {
     let stmt = include_str!("sql/update_post.sql");
     let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
     let stmt = client.prepare(&stmt).await.unwrap();
