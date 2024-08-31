@@ -30,6 +30,24 @@ pub struct NewBlogPost {
     pub author: String,
 }
 
+#[derive(Debug, Validate, Deserialize, Serialize)]
+pub struct UpdateBlogPost {
+    #[validate(length(min = 1, message = "Title cannot be empty"))]
+    pub title: String,
+
+    #[validate(length(min = 1, message = "Content cannot be empty"))]
+    pub content: String,
+
+    pub feature_image: Option<String>,
+
+    #[serde(default = "default_update_slug")]
+    pub update_slug: bool,
+}
+
+fn default_update_slug() -> bool {
+    false
+}
+
 impl BlogPost {
     pub fn new(new_post: NewBlogPost, slug: String) -> Self {
         BlogPost {
@@ -45,11 +63,10 @@ impl BlogPost {
         }
     }
 
-    pub fn update_from(&mut self, updated_post: NewBlogPost, new_slug: Option<String>) {
+    pub fn update_from(&mut self, updated_post: UpdateBlogPost, new_slug: Option<String>) {
         self.title = updated_post.title;
         self.content = updated_post.content;
         self.feature_image = updated_post.feature_image;
-        self.author = updated_post.author;
 
         if let Some(slug) = new_slug {
             self.slug = slug;

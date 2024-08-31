@@ -3,10 +3,7 @@ use std::i32;
 use deadpool_postgres::Client;
 use tokio_pg_mapper::FromTokioPostgresRow;
 
-use super::{
-    errors::MyError,
-    models::{BlogPost, NewBlogPost},
-};
+use super::{errors::MyError, models::BlogPost};
 
 pub async fn get_post_by_slug(client: &Client, slug: &str) -> Result<BlogPost, MyError> {
     let stmt = include_str!("sql/get_post_by_slug.sql");
@@ -90,7 +87,6 @@ pub async fn update_post(client: &Client, post: &BlogPost) -> Result<BlogPost, M
                 &post.content,
                 &post.feature_image,
                 &post.slug,
-                &post.author,
             ],
         )
         .await?;

@@ -8,7 +8,7 @@ use validator::Validate;
 use super::{
     db,
     errors::MyError,
-    models::{BlogPost, NewBlogPost},
+    models::{BlogPost, NewBlogPost, UpdateBlogPost},
     utils::generate_unique_slug,
 };
 
@@ -66,12 +66,11 @@ async fn add_post(
 #[put("/{slug}")]
 async fn update_post(
     slug: web::Path<String>,
-    post: web::Json<NewBlogPost>,
+    post: web::Json<UpdateBlogPost>,
     pool: web::Data<Pool>,
-    query: web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse, Error> {
     let slug_value = slug.into_inner();
-    let post_data: NewBlogPost = post.into_inner();
+    let post_data: UpdateBlogPost = post.into_inner();
 
     if let Err(e) = post_data.validate() {
         return Ok(HttpResponse::BadRequest().json(e.to_string()));
@@ -79,12 +78,12 @@ async fn update_post(
 
     let client = pool.get().await.unwrap();
 
-    let new_slug = match query.get("update_slug").map(|v| v.as_str()) {
-        Some("1") => Some(generate_unique_slug(&client, &post_data.title).await?),
-        _ => None,
-    };
-
     let mut existing_post = db::get_post_by_slug(&client, &slug_value).await?;
+
+    let new_slug = match post_data.update_slug {
+        true => Some(generate_unique_slug(&client, &post_data.title).await?),
+        false => None,
+    };
 
     existing_post.update_from(post_data, new_slug);
 
