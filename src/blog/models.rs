@@ -14,6 +14,7 @@ pub struct BlogPost {
     pub author: String,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
+    pub deleted_at: Option<DateTime<Utc>>,
     pub active: bool,
 }
 
@@ -59,6 +60,7 @@ impl BlogPost {
             author: new_post.author,
             created_at: None,
             updated_at: None,
+            deleted_at: None,
             active: false,
         }
     }

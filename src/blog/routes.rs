@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
-use actix_web::{get, post, put, web, Error, HttpResponse, Responder, Scope};
+use actix_web::{delete, get, post, put, web, HttpResponse, Scope};
 use deadpool_postgres::Pool;
 use serde::Deserialize;
 use validator::Validate;
 
 use super::{
     db,
-    errors::MyError,
+    error::Error,
     models::{BlogPost, NewBlogPost, UpdateBlogPost},
     utils::generate_unique_slug,
 };
@@ -19,12 +17,12 @@ pub struct ListParams {
     title: Option<String>,
 }
 
-#[get("/")]
+#[get("")]
 async fn get_posts(
     pool: web::Data<Pool>,
     query: web::Query<ListParams>,
 ) -> Result<HttpResponse, Error> {
-    let client = pool.get().await.map_err(MyError::PoolError)?;
+    let client = pool.get().await?;
 
     let posts = db::get_posts(&client, query.last_id, query.limit, query.title.clone()).await?;
 
@@ -35,14 +33,14 @@ async fn get_posts(
 async fn get_post(slug: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse, Error> {
     let slug_value = slug.into_inner();
 
-    let client = pool.get().await.map_err(MyError::PoolError)?;
+    let client = pool.get().await?;
 
     let post = db::get_post_by_slug(&client, &slug_value).await?;
 
     Ok(HttpResponse::Ok().json(post))
 }
 
-#[post("/")]
+#[post("")]
 async fn add_post(
     post: web::Json<NewBlogPost>,
     pool: web::Data<Pool>,
@@ -53,14 +51,12 @@ async fn add_post(
         return Ok(HttpResponse::BadRequest().json(e.to_string()));
     }
 
-    let client = pool.get().await.unwrap();
-    let slug = generate_unique_slug(&client, &post_data.title)
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+    let client = pool.get().await?;
+    let slug = generate_unique_slug(&client, &post_data.title).await?;
 
     let new_post = db::add_post(&client, BlogPost::new(post_data, slug)).await?;
 
-    Ok(HttpResponse::Ok().json(new_post))
+    Ok(HttpResponse::Created().json(new_post))
 }
 
 #[put("/{slug}")]
@@ -76,7 +72,7 @@ async fn update_post(
         return Ok(HttpResponse::BadRequest().json(e.to_string()));
     }
 
-    let client = pool.get().await.unwrap();
+    let client = pool.get().await?;
 
     let mut existing_post = db::get_post_by_slug(&client, &slug_value).await?;
 
@@ -92,10 +88,27 @@ async fn update_post(
     Ok(HttpResponse::Ok().json(updated_post))
 }
 
+#[delete("/{slug}")]
+async fn delete_post(
+    slug: web::Path<String>,
+    pool: web::Data<Pool>,
+) -> Result<HttpResponse, Error> {
+    let slug_value = slug.into_inner();
+
+    let client = pool.get().await?;
+
+    let post = db::get_post_by_slug(&client, &slug_value).await?;
+
+    let deleted_post = db::delete_post(&client, &post.id).await?;
+
+    Ok(HttpResponse::Ok().json(deleted_post))
+}
+
 pub fn config() -> Scope {
     web::scope("/post")
         .service(get_posts)
         .service(get_post)
         .service(add_post)
         .service(update_post)
+        .service(delete_post)
 }

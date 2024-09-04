@@ -1,5 +1,5 @@
 pub mod db;
-pub mod errors;
+pub mod error;
 pub mod models;
 pub mod routes;
 pub mod utils;
