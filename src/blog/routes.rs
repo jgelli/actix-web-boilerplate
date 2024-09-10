@@ -10,10 +10,13 @@ use super::{
     utils::generate_unique_slug,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct ListParams {
     last_id: Option<i32>,
     limit: Option<i64>,
+    active: Option<bool>, //TODO: validate permission
+
+    #[validate(length(min = 3, message = "Title must be at least 3 characters long to filter posts."))]
     title: Option<String>,
 }
 
@@ -22,9 +25,18 @@ async fn get_posts(
     pool: web::Data<Pool>,
     query: web::Query<ListParams>,
 ) -> Result<HttpResponse, Error> {
+
+    if let Err(e) = query.validate() {
+        return Ok(HttpResponse::BadRequest().json(e.to_string()));
+    }
+
+    let last_id = query.last_id.unwrap_or(i32::MAX);
+    let limit = query.limit.unwrap_or(10).min(25);
+    let active = query.active.unwrap_or(true); //TODO: validate permission to see inactive posts
+
     let client = pool.get().await?;
 
-    let posts = db::get_posts(&client, query.last_id, query.limit, query.title.clone()).await?;
+    let posts = db::get_posts(&client, last_id, limit, active, &query.title).await?;
 
     Ok(HttpResponse::Ok().json(posts))
 }
@@ -35,7 +47,7 @@ async fn get_post(slug: web::Path<String>, pool: web::Data<Pool>) -> Result<Http
 
     let client = pool.get().await?;
 
-    let post = db::get_post_by_slug(&client, &slug_value).await?;
+    let post = db::get_post_by_slug(&client, &slug_value).await?; //TODO: validate permission to see inactive post
 
     Ok(HttpResponse::Ok().json(post))
 }

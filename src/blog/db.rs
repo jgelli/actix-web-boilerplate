@@ -52,25 +52,15 @@ pub async fn add_post(client: &Client, new_blog: BlogPost) -> Result<BlogPost, E
 
 pub async fn get_posts(
     client: &Client,
-    last_id: Option<i32>,
-    limit: Option<i64>,
-    title: Option<String>,
+    last_id: i32,
+    limit: i64,
+    active: bool, //TODO: validar se pode visualizar os posts inativos
+    title: &Option<String>,
 ) -> Result<Vec<BlogPost>, Error> {
-    let last_id = last_id.unwrap_or(i32::MAX);
-    let limit = limit.unwrap_or(10).min(25);
-    let mut params: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> = vec![&last_id, &limit];
-
-    let mut base_query = include_str!("sql/get_posts.sql").to_string();
-
-    let formatted_title = title.as_ref().map(|t| format!("%{}%", t));
-    if formatted_title.is_some() {
-        base_query.push_str(" AND title ILIKE $3");
-        params.push(&formatted_title);
-    }
-
-    base_query.push_str(" ORDER BY id DESC LIMIT $2");
-
-    let stmt = base_query.replace("$table_fields", &BlogPost::sql_table_fields());
+    let params: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> =
+        vec![&last_id, &active, &title, &limit];
+    let stmt = include_str!("sql/get_posts.sql").to_string();
+    let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
     let stmt = client.prepare(&stmt).await.unwrap();
 
     let posts = client
