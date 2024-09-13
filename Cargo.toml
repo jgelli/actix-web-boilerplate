@@ -18,6 +18,8 @@ tokio-pg-mapper = "0.2.0"
 tokio-pg-mapper-derive = "0.2.0"
 validator = { version = "0.18", features = ["derive"] }
 slug = "0.1.5"
+bcrypt = "0.15.1"
+jsonwebtoken = "9.3.0"
 
 
 [[bin]]

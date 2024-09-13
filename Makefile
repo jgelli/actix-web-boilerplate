@@ -37,7 +37,7 @@ run-migration:
 			$(EXEC_PSQL) -f $(DOCKER_MIGRATION_DIR)/$$filename; \
 		done; \
 	else \
-		$(EXEC_PSQL) -f src$(DOCKER_MIGRATION_DIR)/$(file); \
+		$(EXEC_PSQL) -f $(DOCKER_MIGRATION_DIR)/$(file); \
 	fi
 
 # process_sql:

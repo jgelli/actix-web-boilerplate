@@ -60,7 +60,6 @@ pub async fn get_posts(
     let params: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> =
         vec![&last_id, &active, &title, &limit];
     let stmt = include_str!("sql/get_posts.sql").to_string();
-    let stmt = stmt.replace("$table_fields", &BlogPost::sql_table_fields());
     let stmt = client.prepare(&stmt).await.unwrap();
 
     let posts = client
